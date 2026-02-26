@@ -9,6 +9,16 @@
 <h1 style="text-align: center;"> 🤖 ARLArena: A Unified Framework for Stable
 Agentic Reinforcement Learning </h1>
 
+<div align="center">
+
+<a href="https://huggingface.co/papers/2602.21534"><img src="https://img.shields.io/static/v1?label=Agentic RL&message=Paper&color=red"></a>
+<a href="https://huggingface.co/UCLA-SCAI/models"><img src="https://img.shields.io/static/v1?label=HuggingFace&message=Models&color=yellow"></a>
+<img src="https://img.shields.io/badge/Num_Tasks-16-blue">
+[![GitHub Repo stars](https://img.shields.io/github/stars/WillDreamer/ARL-Arena)](https://github.com/WillDreamer/ARL-Arena/stargazers)
+
+
+</div>
+
 
 ## Abstract
 Agentic reinforcement learning (ARL) has rapidly gained attention as a promising paradigm for training agents to solve complex, multi-step interactive tasks.
@@ -141,6 +151,19 @@ Figure 3: Performance comparison of policy optimization methods across four agen
 <p align="center" style="font-size: 16px; max-width: 800px; margin: 0 auto;">
 Figure 4: Training curves on ALFWorld (left) and Sokoban (right). 
 </p>
+
+
+## ✍️ Citation
+```bibtex
+@misc{wang2026arlarenaunifiedframeworkstable,
+      title={ARLArena: A Unified Framework for Stable Agentic Reinforcement Learning}, 
+      author={Xiaoxuan Wang and Han Zhang and Haixin Wang and Yidan Shi and Ruoyan Li and Kaiqiao Han and Chenyi Tong and Haoran Deng and Renliang Sun and Alexander Taylor and Yanqiao Zhu and Jason Cong and Yizhou Sun and Wei Wang},
+      year={2026},
+      eprint={2602.21534},
+      archivePrefix={arXiv},
+      url={https://arxiv.org/abs/2602.21534}, 
+}
+```
 
 
 <!-- 
