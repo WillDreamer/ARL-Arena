@@ -11,7 +11,7 @@ Agentic Reinforcement Learning </h1>
 
 <div align="center">
 
-<a href="https://huggingface.co/papers/2602.21534"><img src="https://img.shields.io/static/v1?label=Agentic RL&message=Paper&color=red"></a>
+<a href="https://huggingface.co/papers/2602.21534"><img src="https://img.shields.io/static/v1?label=Agentic-RL&message=Paper&color=red"></a>
 <a href="https://huggingface.co/UCLA-SCAI/models"><img src="https://img.shields.io/static/v1?label=HuggingFace&message=Models&color=yellow"></a>
 <img src="https://img.shields.io/badge/Num_Tasks-16-blue">
 [![GitHub Repo stars](https://img.shields.io/github/stars/WillDreamer/ARL-Arena)](https://github.com/WillDreamer/ARL-Arena/stargazers)
