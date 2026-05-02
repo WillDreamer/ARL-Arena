@@ -153,13 +153,11 @@ Figure 4: Training curves on ALFWorld (left) and Sokoban (right).
 
 ## ✍️ Citation
 ```bibtex
-@misc{wang2026arlarenaunifiedframeworkstable,
-      title={ARLArena: A Unified Framework for Stable Agentic Reinforcement Learning}, 
-      author={Xiaoxuan Wang and Han Zhang and Haixin Wang and Yidan Shi and Ruoyan Li and Kaiqiao Han and Chenyi Tong and Haoran Deng and Renliang Sun and Alexander Taylor and Yanqiao Zhu and Jason Cong and Yizhou Sun and Wei Wang},
-      year={2026},
-      eprint={2602.21534},
-      archivePrefix={arXiv},
-      url={https://arxiv.org/abs/2602.21534}, 
+@article{wang2026arlarena,
+  title={ARLArena: A Unified Framework for Stable Agentic Reinforcement Learning},
+  author={Wang, Xiaoxuan and Zhang, Han and Wang, Haixin and Shi, Yidan and Li, Ruoyan and Han, Kaiqiao and Tong, Chenyi and Deng, Haoran and Sun, Renliang and Taylor, Alexander and others},
+  journal={arXiv preprint arXiv:2602.21534},
+  year={2026}
 }
 ```
 
