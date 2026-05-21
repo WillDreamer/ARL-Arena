@@ -72,7 +72,7 @@ Python=3.11, VeRL=0.4.0, PyTorch=2.6.0, and vLLM=0.8.5
 bash prepare_all_web.sh
 
 # 2. Run the demo code with:
-conda activate agentrl_web.sh
+conda activate agentrl_web
 bash examples/shop_agent_trainer/train_xxxx.sh
 ```
 
