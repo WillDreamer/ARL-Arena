@@ -138,3 +138,5 @@ datasets/
 agent_system/environments/env_package/webshop/webshop/dataset/items_human_ins.json
 agent_system/environments/env_package/webshop/webshop/dataset/items_ins_v2_1000.json
 agent_system/environments/env_package/webshop/webshop/dataset/items_shuffle_1000.json
+
+flash_attn-2.7.4.post1+cu12torch2.6cxx11abiFALSE-cp310-cp310-linux_x86_64.whl

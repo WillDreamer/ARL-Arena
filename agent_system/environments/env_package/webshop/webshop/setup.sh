@@ -11,7 +11,7 @@ die() { printf "\033[1;31m[x] %s\033[0m\n" "$*"; exit 1; }
 trap 'die "脚本在第 $LINENO 行出错（exit=$?）。"' ERR
 
 eval "$(conda shell.bash hook)"
-conda create -n agentrl_web python==3.10 -c conda-forge -y
+conda create -n agentrl_web python==3.10 pip -c conda-forge
 conda activate agentrl_web
 python3 -m pip install uv
 
@@ -27,8 +27,8 @@ conda install mkl -y
 # webshop installation, model loading
 log "安装 spacy, if failed, try to install spacy from source version"
 # pip install -U "numpy==2.2.6" "scipy==1.15.3"
-python -m spacy download en_core_web_sm --direct
-python -m spacy download en_core_web_lg --direct
+# python -m spacy download en_core_web_sm --direct
+# python -m spacy download en_core_web_lg --direct
 # python3 -m uv pip install -U "numpy==2.2.6"
 
 log "gdown files from google drive"
@@ -39,11 +39,11 @@ cd dataset;
 # # items_ins_v2
 # [ -f items_ins_v2.json ] || gdown https://drive.google.com/uc?id=1s2j6NgHljiZzQNL3veZaAiyW_qDEgBNi -O items_ins_v2.json
 # items_shuffle_1000 - product scraped info
-[ -f items_shuffle_1000.json ] || gdown https://drive.google.com/uc?id=1EgHdxQ_YxqIQlvvq5iKlCrkEKR6-j0Ib -O items_shuffle_1000.json 
-# items_ins_v2_1000 - product attributes
-[ -f items_ins_v2_1000.json ] || gdown https://drive.google.com/uc?id=1IduG0xl544V_A_jv3tHXC0kyFi7PnyBu -O items_ins_v2_1000.json
-# items_human_ins
-[ -f items_human_ins.json ] || gdown https://drive.google.com/uc?id=14Kb5SPBk_jfdLZ_CDBNitW98QLDlKR5O -O items_human_ins.json
+# [ -f items_shuffle_1000.json ] || gdown https://drive.google.com/uc?id=1EgHdxQ_YxqIQlvvq5iKlCrkEKR6-j0Ib -O items_shuffle_1000.json 
+# # items_ins_v2_1000 - product attributes
+# [ -f items_ins_v2_1000.json ] || gdown https://drive.google.com/uc?id=1IduG0xl544V_A_jv3tHXC0kyFi7PnyBu -O items_ins_v2_1000.json
+# # items_human_ins
+# [ -f items_human_ins.json ] || gdown https://drive.google.com/uc?id=14Kb5SPBk_jfdLZ_CDBNitW98QLDlKR5O -O items_human_ins.json
 cd ..
 
 log "Build search engine index"

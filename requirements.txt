@@ -1,27 +1,42 @@
 # requirements.txt records the full set of dependencies for development
 accelerate
 codetiming
-datasets
+datasets==4.8.5
 dill
-flash-attn
+# setup.sh installs a CUDA/PyTorch-specific flash-attn wheel before this file.
+flash-attn==2.7.4.post1
 hydra-core
 liger-kernel
-numpy<2.0.0
+numpy==1.26.4
 pandas
 peft
 pyarrow>=19.0.0
 pybind11
 pylatexenc
 pre-commit
-ray[default]
+ray[default]==2.45.0
 tensordict>=0.8.0,<=0.9.1,!=0.9.0
 torchdata
-transformers
+transformers>=4.53.0,<4.54.0
 # vllm==0.8.4
 wandb
-packaging>=20.0
+packaging>=25.0,<26.0
 uvicorn
 fastapi
 latex2sympy2_extended
 math_verify
 tensorboard
+
+# Compatibility pins for verl, vllm==0.8.5, and the webshop environment.
+fsspec>=2023.1.0,<=2026.2.0
+opentelemetry-api>=1.26.0,<1.27.0
+opentelemetry-sdk>=1.26.0,<1.27.0
+opentelemetry-semantic-conventions==0.47b0
+opentelemetry-exporter-prometheus==0.47b0
+typer<0.10.0
+
+# Keep older UI/browser helper dependencies compatible with packages installed by webshop.
+markupsafe>=2.0,<3.0
+pillow<11.0,>=8.0
+websockets>=10.0,<12.0
+urllib3>=1.26,<2.0
