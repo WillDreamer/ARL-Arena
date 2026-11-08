@@ -4,7 +4,7 @@
 
 在小模型上检验 ARLArena 关于 importance-sampling clipping 的结论：**tolerant token-level clipping 和 sequence-level clipping，哪种让 RL 训练更稳定？**
 
-> 本分支基于 [ARLArena](https://github.com/WillDreamer/ARL-Arena)（Wang et al., ICML 2026）的 fork。我们的代码全部在 [`course_project_grpo_clipping/`](course_project_grpo_clipping/) 文件夹里，该文件夹的 README 记录了完整的实验细节和运行方法。仓库其余部分是 ARLArena 的原始代码，未做修改；原项目说明见[上游仓库](https://github.com/WillDreamer/ARL-Arena)。
+> 本分支基于 [ARLArena](https://github.com/WillDreamer/ARL-Arena)（Wang et al., ICML 2026）的 fork。我们的代码全部在 [`course_project_grpo_clipping/`](course_project_grpo_clipping/) 文件夹里，该文件夹的 README 记录了完整的实验细节和运行方法。最初的论文分析和项目规划见 [`docs/project_planning.md`](course_project_grpo_clipping/docs/project_planning.md)。仓库其余部分是 ARLArena 的原始代码，未做修改；原项目说明见[上游仓库](https://github.com/WillDreamer/ARL-Arena)。
 
 ---
 
