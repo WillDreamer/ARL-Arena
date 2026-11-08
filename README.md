@@ -1,216 +1,105 @@
-<!-- <div align="center">
- 👋 Hi, everyone! 
-    We will tell the world open-source agentic RL area is suffering!
-    <br>
-    <br>
-</div> -->
+# Does Stable Agentic RL Scale Down?
 
+**NYU NLP 课程项目 · Team 4（Yuxuan Feng、Yixuan Ma、Lilei Wu）**
 
-<h1 style="text-align: center;"> 🤖 ARLArena: A Unified Framework for Stable
-Agentic Reinforcement Learning </h1>
+在小模型上检验 ARLArena 关于 importance-sampling clipping 的结论：**tolerant token-level clipping 和 sequence-level clipping，哪种让 RL 训练更稳定？**
 
-<div align="center">
+> 本分支基于 [ARLArena](https://github.com/WillDreamer/ARL-Arena)（Wang et al., ICML 2026）的 fork。我们的代码全部在 [`course_project_grpo_clipping/`](course_project_grpo_clipping/) 文件夹里，该文件夹的 README 记录了完整的实验细节和运行方法。仓库其余部分是 ARLArena 的原始代码，未做修改；原项目说明见[上游仓库](https://github.com/WillDreamer/ARL-Arena)。
 
-<a href="https://huggingface.co/papers/2602.21534"><img src="https://img.shields.io/static/v1?label=Agentic-RL&message=Paper&color=red"></a>
-<a href="https://huggingface.co/UCLA-SCAI/models"><img src="https://img.shields.io/static/v1?label=HuggingFace&message=Models&color=yellow"></a>
-[![GitHub Repo stars](https://img.shields.io/github/stars/WillDreamer/ARL-Arena)](https://github.com/WillDreamer/ARL-Arena/stargazers)
+---
 
+## 一、项目要做什么
 
-</div>
+### 背景
 
+用强化学习（RL）训练大语言模型做推理或 agent 任务，训练经常会**突然崩溃**：准确率先涨后断崖式下跌，KL 和梯度范数同时爆炸。ARLArena 把策略梯度方法拆成 4 个设计维度逐一研究，发现 **importance-sampling（IS）clipping 是对稳定性影响最大的维度**（Finding 1）：
 
-## Abstract
-Agentic reinforcement learning (ARL) has rapidly gained attention as a promising paradigm for training agents to solve complex, multi-step interactive tasks.
-Despite encouraging early results, ARL remains highly unstable, often leading to training collapse. This instability limits scalability to larger environments and longer interaction horizons, and constrains systematic exploration of algorithmic design choices.
-In this paper, we first propose ARLArena, a stable training recipe and systematic analysis framework that examines training stability in a controlled and reproducible setting. ARLArena first constructs a clean and standardized testbed. Then, we decompose policy gradient into four core design dimensions and assess the performance and stability of each dimension. Through this fine-grained analysis, we distill a unified perspective on ARL and propose SAMPO, a stable agentic policy optimization method designed to mitigate the dominant sources of instability in ARL.
-Empirically, SAMPO achieves consistently stable training and strong performance across diverse agentic tasks. Overall, this study provides a unifying policy gradient perspective for ARL and offers practical guidance for building stable and reproducible LLM-based agent training pipelines.
+> tolerant clipping yields fast early gains but causes training collapse, whereas sequence-level clipping ensures stable improvement.
 
-<p align="center"><img src="public/arlarena_overview.png" width="800px" alt="ARLArena Framework" /></p>
-<p align="center" style="font-size: 16px; max-width: 800px; margin: 0 auto;">
-Figure 1: Overview of our framework
-</p>
+但这个结论是在 4B–8B 模型、H200/B200 GPU 上得到的，大多数学生和小实验室复现不了。
 
-## Our Framework Design
+### 研究问题
 
-- ARLArena profoundly analyzes the existing sufferings of Agentic RL from the perspective of policy gradient.
-- ARLArena comprehensively compares existing Agentic RL algorithms and provides a systematic discussion and analysis across multiple dimensions.
-- ARLArena universally provides experimental results and findings on multiple agentic tasks.
+ARLArena 的 Finding 1 在 **0.5B 模型 + LoRA + 单张 GPU** 的条件下还成立吗？
 
-### 🔥 Key Features
+### 对比与假设
 
-- ✅ Support Training Multi-turn Math+Code Interpreter Agents
-- ✅ Support Training Multi-turn Embody Agents
-- ✅ Support Training Multi-turn Multi-modal Game Agents
-- ✅ Support Training Multi-turn Web Agents
-- ✅ Support Training Multi-turn Search Agents
+| | (a) Tolerant token-level clipping | (b) Sequence-level clipping（GSPO） |
+|---|---|---|
+| 做法 | 每个 token 一个 ratio，clip 上界放宽（ε_high = 0.6） | 每个回答一个 ratio（几何平均），整体 clip 一次 |
+| 预测 | 前期提升更快，之后崩溃 | 稳定提升 |
 
-### 🔧 Upcoming Features and Changes
+**Hypothesis**：tolerant clipping will produce faster early improvement followed by collapse, while sequence-level clipping will be more stable.
 
-- ➡️ Support Software Enginnering Agents
+### 方法与评估
 
-### 📅 TODO
+- **方法**：用 Hugging Face TRL 的 GRPOTrainer，在 GSM8K 上训练 Qwen2.5-0.5B-Instruct + LoRA。两组之间**只有 clipping 不同**，其余全部固定。
+- **评估**：held-out 准确率随训练步数的曲线；稳定性指标包括 KL、梯度范数、被 clip 的比例、格式正确率。"崩溃"定义为准确率从峰值显著下降，同时 KL 或梯度范数出现尖峰。
 
-- [ ] Cross-domain agentic reasoning
-- [ ] Multiple tool integration reasoning
+---
 
-## 💡 Getting Started
+## 二、已经完成的
 
+| 状态 | 内容 |
+|---|---|
+| ✅ | **训练 pipeline**：基于 TRL GRPOTrainer + LoRA，支持切换 clipping 粒度（token / sequence）和宽度（ε） |
+| ✅ | **NYU Torch 集群环境**：Python 环境、依赖版本固定、模型和数据预下载、Slurm 提交脚本 |
+| ✅ | **两轮冒烟测试**：修复环境问题；确认需要 `num_iterations = 2`，否则 ratio 恒为 1、clipping 永远不触发 |
+| ✅ | **v1 pilot（4 组 × 150 步）**：发现 **reward hacking**，模型不再推理、只输出答案标签。改用 Qwen 原生的 `\boxed{}` 格式后解决 |
+| ✅ | **v2 pilot（4 组 × 300 步，单个 seed）**：训练正常，结果见下 |
+| ✅ | 代码、配置和逐步日志已上传到本仓库 |
+| ✅ | Midterm presentation |
 
-ARLArena is based on the following main dependencies:
+### v2 pilot 的主要发现
 
-```python
-Python=3.11, VeRL=0.4.0, PyTorch=2.6.0, and vLLM=0.8.5
-```
+| | (a) tolerant（token_wide） | (b) sequence-level（seq_narrow） |
+|---|---|---|
+| 测试准确率（第 50 步 → 第 300 步） | 35.9% → 39.1% | 33.1% → 36.9% |
+| 被 clip 的比例 | 0.02% | 33.3% |
+| 最终 KL | 0.0032 | 0.0022 |
+| 是否崩溃 | 否 | 否 |
 
-## 🚀 Existing Support
+- **Pipeline 可行**：单张 L40S 每组约 1.1–1.4 小时。
+- **两组都没有崩溃**，准确率差距（约 3 个点）在噪声范围内。Hypothesis 目前**既未被支持，也未被推翻**。
+- **tolerant 组的 clipping 几乎从不触发**：当前设置下模型每步变化很小（KL 约 0.003），放宽的上界根本用不到。
+- **要真正检验 hypothesis，必须提高 off-policy 程度**，这是下一步的重点。
 
-> ### 🛒 **Web Agents**
+详细结果和训练曲线见 [`course_project_grpo_clipping/README.md`](course_project_grpo_clipping/README.md)。
 
+---
 
-```bash
-# 1. Build the webshop environments
-bash prepare_all_web.sh
+## 三、未来要做的
 
-# 2. Run the demo code with:
-conda activate agentrl_web.sh
-bash examples/shop_agent_trainer/train_xxxx.sh
-```
+| 优先级 | 任务 | 目的 |
+|---|---|---|
+| 1 | **压力测试**：`num_iterations` 提高到 4 / 8，或 lr 提高到 5e-5 | 找到 clipping 真正起作用的设置，看 tolerant 组是否开始崩溃 |
+| 2 | **多 seed**：每组跑 3 个 seed，报告均值 ± 标准差 | 区分真实差异和随机噪声（proposal 要求） |
+| 3 | **崩溃机制诊断**：按 advantage 正负，统计越界 IS ratio 的比例；尝试 sequence masking | 检验论文的说法：崩溃由"负 advantage + 低 ratio"的序列累积造成 |
+| 4 | **加入 CISPO / SAPO 式的 tolerant 变体**：参考本仓库 `verl/trainer/ppo/core_algos.py` 的官方实现 | ARLArena 原文的 tolerant 指 CISPO/SAPO（保留越界 token 的梯度），与我们放宽 ε 的做法不同 |
+| 5 | **模型规模**：在 Qwen2.5-1.5B 上重复关键实验 | 检验效应是否随规模增强（proposal 中的 robustness 部分） |
+| 6 | *Stretch*：极小的 Sokoban 多轮环境 | 从单轮数学任务扩展到真正的多轮 agent 场景 |
+| 7 | Final report | 汇总所有结果 |
 
-> ### 🤖 **Embodied Agents**
-```bash
-# 1. Build the environments
-bash prepare_all_embody.sh
+### 已知局限
 
-# 2. Run the demo code with:
-bash examples/world_agent_trainer/train_xxx.sh
+- 目前每组只有 1 个 seed。
+- 约 15% 的回答达到 400 token 上限被截断（两组比例相同）。
+- 300 步只用了约 8% 的训练集。
+- GSM8K 是单轮任务，不是真正的多轮 agent 场景。
 
-```
+---
 
-> ### 🧮 **Math+CI**
+## 引用
 
-1. We use Sandbox Fusion as an asynchronous code interpreter. You can follow the [Guidance](sandbox/README.md) to run the CI.
+本项目复现和检验的原始工作：
 
-2. The training datasets are Math3-5 from SimpleRL in `datasets`.
-
-```bash
-# 3. Install the requirements
-bash prepare_all_science.sh
-
-# 4. Run the demo code with:
-bash examples/simpletir_trainer/train_xxx.sh
-```
-
-> ### 🎮 **OpenAI Game Agents**
-
-```bash
-# 1. Install the requirements
-bash prepare_all_game.sh
-
-# 2. Run the demo code with:
-bash examples/game_agent_trainer/train_xxx.sh
-```
-
-> ### 🕸️ **Search Agents**
-
-```bash
-#! 1. Build the RAG server environments
-bash prepare_all_search.sh
-
-
-# 2. Run the demo code with:
-bash examples/search_agent_trainer/train_xxx.sh
-```
-
-## 🌊 Easy Extension
-
-🔹 All of the methods utilized is in `recipe`, you can warp the verl worker for your code to join our codebase. The folder under `recipe` can represent either a method for different tasks or a series methods for one task. You can refer to [Easy Extension](docs/extension.md) for examples.
-
-🔹 All of the environments utilized is in `agent_system`, you can warp the env for your code to join our codebase.
-
-🔹 Add specific dependencies to `requirements_xxx.txt`
-
-🔹 Feel free to add the folder of the third-party tools, e.g., `sandbox` for code implementation.
-
-
-## 📊 Further Details
-
-<p align="center"><img src="public/sum.png" width="900px" alt="table" /></p>
-<p align="center" style="font-size: 16px; max-width: 800px; margin: 0 auto;">
-Figure 2: A summary of policy optimization methods studied in ARLArena.
-</p>
-
-<p align="center"><img src="public/table.png" width="900px" alt="table" /></p>
-<p align="center" style="font-size: 16px; max-width: 800px; margin: 0 auto;">
-Figure 3: Performance comparison of policy optimization methods across four agentic tasks, evaluated on the SFT version of Qwen3-4B.
-</p>
-
-
-<p align="center"><img src="public/combined_success_rate.png" width="900px" alt="success" /></p>
-<p align="center" style="font-size: 16px; max-width: 800px; margin: 0 auto;">
-Figure 4: Training curves on ALFWorld (left) and Sokoban (right). 
-</p>
-
-
-## ✍️ Citation
 ```bibtex
 @article{wang2026arlarena,
   title={ARLArena: A Unified Framework for Stable Agentic Reinforcement Learning},
-  author={Wang, Xiaoxuan and Zhang, Han and Wang, Haixin and Shi, Yidan and Li, Ruoyan and Han, Kaiqiao and Tong, Chenyi and Deng, Haoran and Sun, Renliang and Taylor, Alexander and others},
+  author={Wang, Xiaoxuan and Zhang, Han and Wang, Haixin and others},
   journal={arXiv preprint arXiv:2602.21534},
   year={2026}
 }
 ```
 
-## 🌟 Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=WillDreamer/ARL-Arena&type=Date)](https://www.star-history.com/#WillDreamer/ARL-Arena&Date)
-
-<!-- 
-
-```bash
-# Install requiremnet
-pip install mlflow
-
-# Start server
-mlflow server \
-  --host 0.0.0.0 --port 5000 \
-  --backend-store-uri sqlite:////tmp/mlruns.db \
-  --default-artifact-root /tmp/mlruns
-
-export MLFLOW_TRACKING_URI=http://127.0.0.1:5000
-
-actor_rollout_ref.rollout.trace.backend: mlflow  # or weave
-actor_rollout_ref.rollout.trace.token2text: True
-trainer.logger: ['console', 'mlflow']
-``` -->
-
-## 🎆 Awesome work for reference
-
-- [TinyZero](https://github.com/Jiayi-Pan/TinyZero): a reproduction of **DeepSeek R1 Zero** recipe for reasoning tasks ![GitHub Repo stars](https://img.shields.io/github/stars/Jiayi-Pan/TinyZero)
-- [SkyThought](https://github.com/NovaSky-AI/SkyThought): RL training for Sky-T1-7B by NovaSky AI team. ![GitHub Repo stars](https://img.shields.io/github/stars/NovaSky-AI/SkyThought)
-- [simpleRL-reason](https://github.com/hkust-nlp/simpleRL-reason): SimpleRL-Zoo: Investigating and Taming Zero Reinforcement Learning for Open Base Models in the Wild ![GitHub Repo stars](https://img.shields.io/github/stars/hkust-nlp/simpleRL-reason)
-- [Easy-R1](https://github.com/hiyouga/EasyR1): **Multi-modal** RL training framework ![GitHub Repo stars](https://img.shields.io/github/stars/hiyouga/EasyR1)
-- [OpenManus-RL](https://github.com/OpenManus/OpenManus-RL): LLM Agents RL tunning framework for multiple agent environments. ![GitHub Repo stars](https://img.shields.io/github/stars/OpenManus/OpenManus-RL)
-- [rllm](https://github.com/agentica-project/rllm): async RL training with [verl-pipeline](https://github.com/agentica-project/verl-pipeline) ![GitHub Repo stars](https://img.shields.io/github/stars/agentica-project/rllm)
-- [PRIME](https://github.com/PRIME-RL/PRIME): Process reinforcement through implicit rewards ![GitHub Repo stars](https://img.shields.io/github/stars/PRIME-RL/PRIME)
-- [RAGEN](https://github.com/ZihanWang314/ragen): a general-purpose reasoning **agent** training framework ![GitHub Repo stars](https://img.shields.io/github/stars/ZihanWang314/ragen)
-- [Logic-RL](https://github.com/Unakar/Logic-RL): a reproduction of DeepSeek R1 Zero on 2K Tiny Logic Puzzle Dataset. ![GitHub Repo stars](https://img.shields.io/github/stars/Unakar/Logic-RL)
-- [Search-R1](https://github.com/PeterGriffinJin/Search-R1): RL with reasoning and **searching (tool-call)** interleaved LLMs ![GitHub Repo stars](https://img.shields.io/github/stars/PeterGriffinJin/Search-R1)
-- [DeepRetrieval](https://github.com/pat-jj/DeepRetrieval): RL Training of **Search Agent** with **Search/Retrieval Outcome** ![GitHub Repo stars](https://img.shields.io/github/stars/pat-jj/DeepRetrieval)
-- [ReSearch](https://github.com/Agent-RL/ReSearch): Learning to **Re**ason with **Search** for LLMs via Reinforcement Learning ![GitHub Repo stars](https://img.shields.io/github/stars/Agent-RL/ReSearch)
-- [Code-R1](https://github.com/ganler/code-r1): Reproducing R1 for **Code** with Reliable Rewards ![GitHub Repo stars](https://img.shields.io/github/stars/ganler/code-r1)
-- [Skywork-OR1](https://github.com/SkyworkAI/Skywork-OR1): Skywork open reaonser series ![GitHub Repo stars](https://img.shields.io/github/stars/SkyworkAI/Skywork-OR1)
-- [ToRL](https://github.com/GAIR-NLP/ToRL): Scaling tool-integrated RL ![GitHub Repo stars](https://img.shields.io/github/stars/GAIR-NLP/ToRL)
-- [verl-agent](https://github.com/langfengQ/verl-agent): A scalable training framework for **long-horizon LLM/VLM agents**, along with a new algorithm **GiGPO** ![GitHub Repo stars](https://img.shields.io/github/stars/langfengQ/verl-agent)
-- [PF-PPO](https://arxiv.org/abs/2409.06957): Policy Filtration for PPO based on the reliability of reward signals for more efficient and robust RLHF.
-- [GUI-R1](https://github.com/ritzz-ai/GUI-R1): **GUI-R1**: A Generalist R1-style Vision-Language Action Model For **GUI Agents** ![GitHub Repo stars](https://img.shields.io/github/stars/ritzz-ai/GUI-R1)
-- [DeepResearcher](https://github.com/GAIR-NLP/DeepResearcher): Scaling deep research via reinforcement learning in real-world environments ![GitHub Repo stars](https://img.shields.io/github/stars/GAIR-NLP/DeepResearcher)
-- [VAGEN](https://github.com/RAGEN-AI/VAGEN): Training VLM agents with multi-turn reinforcement learning ![GitHub Repo stars](https://img.shields.io/github/stars/RAGEN-AI/VAGEN)
-- [ReTool](https://retool-rl.github.io/): ReTool: reinforcement learning for strategic tool use in LLMs
-- [Seed-Coder](https://github.com/ByteDance-Seed/Seed-Coder): RL training of Seed-Coder boosts performance on competitive programming ![GitHub Repo stars](https://img.shields.io/github/stars/ByteDance-Seed/Seed-Coder)
-- [all-hands/openhands-lm-32b-v0.1](https://www.all-hands.dev/blog/introducing-openhands-lm-32b----a-strong-open-coding-agent-model): A strong, open coding agent model, trained with [multi-turn fine-tuning](https://github.com/volcengine/verl/pull/195)
-- [RM-R1](https://arxiv.org/abs/2505.02387): RL training of reasoning reward models ![GitHub Repo stars](https://img.shields.io/github/stars/RM-R1-UIUC/RM-R1)
-- [Absolute Zero Reasoner](https://arxiv.org/abs/2505.03335): A no human curated data self-play framework for reasoning![GitHub Repo stars](https://img.shields.io/github/stars/LeapLabTHU/Absolute-Zero-Reasoner)
-- [LUFFY](https://arxiv.org/pdf/2504.14945): Learning to Reason under Off-Policy Guidance![GitHub Repo stars](https://img.shields.io/github/stars/ElliottYan/LUFFY)
-- [verl-tool](https://github.com/TIGER-AI-Lab/verl-tool): An unified and easy-to-extend tool-agent training framework based on verl![GitHub Repo stars](https://img.shields.io/github/stars/TIGER-AI-Lab/verl-tool)
-- [DeepMath](https://github.com/zwhe99/DeepMath): DeepMath-103K data and series models for math reasoning![GitHub Repo stars](https://img.shields.io/github/stars/zwhe99/DeepMath)
+ARLArena 代码遵循其原始 [LICENSE](LICENSE)。
